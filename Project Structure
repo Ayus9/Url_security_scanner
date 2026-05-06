@@ -1,0 +1,32 @@
+## 📂 Project Structure
+
+    ```
+    url-scanner/
+    │
+    ├── app.py                    ← Flask app — all routes & config
+    ├── requirements.txt          ← Python dependencies
+    ├── README.md                 ← This file
+    ├── LICENSE                   ← MIT License
+    ├── .gitignore                ← Git ignore rules
+    │
+    ├── utils/                    ← Backend logic (modular)
+    │   ├── __init__.py
+    │   ├── local_analyzer.py     ← 14 heuristic URL checks
+    │   ├── virustotal.py         ← VirusTotal API v3
+    │   ├── zap_scanner.py        ← OWASP ZAP spider + scan
+    │   └── risk_calculator.py    ← Weighted score formula
+    │
+    ├── templates/                ← Jinja2 HTML (Flask)
+    │   ├── index.html            ← Main scanner page
+    │   └── report.html           ← Printable report page
+    │
+    └── static/
+        ├── css/
+        │   └── style.css         ← Dark hacker stylesheet
+        └── js/
+            ├── matrix.js         ← Matrix rain animation
+            ├── scanner.js        ← Scanner logic + API calls
+            └── report.js         ← Report page renderer
+    ```
+
+    ---
