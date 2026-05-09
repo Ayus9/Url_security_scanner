@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title> URL Security Scanner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+ 
+  <!-- Matrix Canvas Background -->
+  <canvas id="matrix-canvas"></canvas>
+ 
+  <!-- Scan Line Effect -->
+  <div class="scan-line"></div>
+ 
+  <div class="wrapper">
+ 
+    <!-- ── HEADER ───────────────────────────────────────────────────────── -->
+    <header class="site-header">
+      <div class="header-glow"></div>
+      <div class="header-badge"> fong v1.0</div>
+      <h1 class="site-title" id="typed-title"></h1>
+      <p class="site-sub">EDUCATIONAL SECURITY AWARENESS TOOL</p>
+      <div class="header-tags">
+        <span class="htag">Phishing Detection</span>
+        <span class="htag">XSS Analysis</span>
+        <span class="htag">SQL Injection</span>
+        <span class="htag htag-purple">VirusTotal</span>
+        <span class="htag htag-yellow">OWASP ZAP</span>
+      </div>
+      <!-- Backend status -->
+      <div class="backend-status" id="backend-status">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Checking backend…</span>
+      </div>
+    </header>
+ 
+    <!-- ── SCAN CARD ─────────────────────────────────────────────────────── -->
+    <section class="card scan-card">
+      <div class="card-label">▶ TARGET URL</div>
+ 
+      <div class="input-row">
+        <input
+          type="url"
+          id="url-input"
+          class="url-input"
+          placeholder="https://example.com/path?param=value"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="scan-btn" id="scan-btn">
+          <span class="btn-text">⟫ SCAN NOW</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+      </div>
+ 
+      <!-- Options -->
+      <div class="options-row">
+        <label class="toggle-box">
+          <input type="checkbox" id="opt-vt" checked />
+          <span class="toggle-label purple">🛡 VirusTotal</span>
+          <span class="toggle-note">(API key Temporary)</span>
+        </label>
+        <label class="toggle-box">
+          <input type="checkbox" id="opt-zap" />
+          <span class="toggle-label yellow">⚡ OWASP ZAP</span>
+          <span class="toggle-note">(Demo)</span>
+        </label>
+      </div>
+ 
+      <!-- Quick test URLs -->
+      <div class="quick-tests">
+        <span class="quick-label">TRY:</span>
+        <button class="quick-btn green"  data-url="https://google.com">🟢 Safe</button>
+        <button class="quick-btn yellow" data-url="https://paypal-secure-verify.xyz/account/confirm">🟡 Suspicious</button>
+        <button class="quick-btn red"    data-url="http://192.168.1.1/login?id=1' OR 1=1--&q=&lt;script&gt;alert(1)&lt;/script&gt;">🔴 Dangerous</button>
+      </div>
+ 
+      <div class="disclaimer">
+        ⚠ This tool is for educational and security awareness purposes only.
+        Only scan URLs you own or have explicit written permission to test.
+      </div>
+    </section>
+ 
+    <!-- ── TABS ──────────────────────────────────────────────────────────── -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="result">◈ Analysis</button>
+      <button class="tab-btn"        data-tab="history">▤ History <span id="history-count">(0)</span></button>
+    </div>
+ 
+    <!-- ── RESULTS PANEL ─────────────────────────────────────────────────── -->
+    <section class="card results-card" id="tab-result">
+ 
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">⬡</div>
+        <div class="empty-text">AWAITING TARGET URL</div>
+        <div class="empty-sub">Enter a URL above and press SCAN NOW</div>
+      </div>
+ 
+      <!-- Scanning state -->
+      <div class="scanning-state hidden" id="scanning-state">
+        <div class="big-spinner"></div>
+        <div class="scanning-title">DEEP SCANNING IN PROGRESS</div>
+        <ul class="scan-steps" id="scan-steps">
+          <li data-step="0">○ Resolving domain…</li>
+          <li data-step="1">○ Checking HTTPS &amp; structure…</li>
+          <li data-step="2">○ Detecting phishing patterns…</li>
+          <li data-step="3">○ Testing injection vectors…</li>
+          <li data-step="4">○ Querying VirusTotal…</li>
+          <li data-step="5">○ Running OWASP ZAP…</li>
+          <li data-step="6">○ Building report…</li>
+        </ul>
+      </div>
+ 
+      <!-- Results state -->
+      <div class="result-state hidden" id="result-state">
+ 
+        <!-- Top grid: gauge + checks -->
+        <div class="top-grid">
+          <!-- Risk gauge -->
+          <div class="panel gauge-panel">
+            <div class="gauge-score" id="gauge-score">0</div>
+            <div class="gauge-max">/100</div>
+            <div class="gauge-label" id="gauge-label">RISK: LOW</div>
+            <div class="gauge-bar-track">
+              <div class="gauge-bar-fill" id="gauge-bar"></div>
+            </div>
+            <div class="gauge-legend">
+              <span>LOW</span><span>MED</span><span>HIGH</span>
+            </div>
+            <div class="gauge-sources" id="gauge-sources"></div>
+          </div>
+ 
+          <!-- Security checks -->
+          <div class="panel checks-panel">
+            <div class="panel-title">Security Checks</div>
+            <div id="checks-list"></div>
+          </div>
+        </div>
+ 
+        <!-- Local issues -->
+        <div class="section-block">
+          <div class="section-title">Issues Detected <span id="issues-count" class="count-badge"></span></div>
+          <div id="issues-list"></div>
+        </div>
+ 
+        <!-- VirusTotal panel -->
+        <div class="section-block" id="vt-panel" style="display:none">
+          <div class="panel-header purple-header">
+            <span>🛡 VirusTotal Reputation</span>
+            <span class="demo-badge" id="vt-demo-badge" style="display:none">DEMO</span>
+          </div>
+          <div id="vt-content"></div>
+        </div>
+ 
+        <!-- ZAP panel -->
+        <div class="section-block" id="zap-panel" style="display:none">
+          <div class="panel-header yellow-header">
+            <span>⚡ OWASP ZAP Active Scan</span>
+            <span class="zap-version" id="zap-version"></span>
+          </div>
+          <div id="zap-content"></div>
+        </div>
+ 
+        <!-- Recommendations -->
+        <div class="section-block">
+          <div class="section-title">Recommendations</div>
+          <ul id="recs-list" class="recs-list"></ul>
+        </div>
+ 
+        <!-- URL meta -->
+        <div class="url-meta" id="url-meta"></div>
+ 
+        <!-- Export -->
+        <button class="export-btn" id="export-btn">↓ EXPORT FULL REPORT (.txt)</button>
+ 
+      </div><!-- /result-state -->
+ 
+    </section>
+ 
+    <!-- ── HISTORY PANEL ─────────────────────────────────────────────────── -->
+    <section class="card results-card hidden" id="tab-history">
+      <div class="panel-title" style="margin-bottom:16px">Scan History</div>
+      <div id="history-list">
+        <div class="empty-sub" style="text-align:center;padding:30px 0">No scans yet.</div>
+      </div>
+    </section>
+ 
+    <footer class="site-footer">
+      ⚠ EDUCATIONAL &amp; SECURITY AWARENESS PURPOSES ONLY · NOT FOR UNAUTHORIZED USE
+    </footer>
+ 
+  </div><!-- /wrapper -->
+ 
+  <script src="{{ url_for('static', filename='js/matrix.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/scanner.js') }}"></script>
+</body>
+</html>
